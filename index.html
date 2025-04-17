@@ -4,20 +4,625 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BookBot</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    :root {
+      --background: #0f172a;
+      --text: #e2e8f0;
+      --container-bg: #1e293b;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --input-bg: #334155;
+      --message-user: #334155;
+      --message-bot: #1e293b;
+      --border: #475569;
+      --error: #ef4444;
+      --success: #10b981;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--background);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 800px;
+      height: 90vh;
+      display: flex;
+      flex-direction: column;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+    
+    .header {
+      background: var(--container-bg);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .header h1 {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .theme-toggle {
+      background: var(--input-bg);
+      border: none;
+      color: var(--text);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: all 0.2s;
+    }
+    
+    .theme-toggle:hover {
+      background: var(--primary);
+    }
+    
+    .login-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: var(--container-bg);
+      padding: 20px;
+      gap: 16px;
+    }
+    
+    .login-card {
+      background: var(--container-bg);
+      padding: 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border);
+    }
+    
+    .login-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    .login-header h2 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    
+    .login-header p {
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+    
+    .password-input {
+      position: relative;
+      display: flex;
+    }
+    
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--text);
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+    
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+    
+    .login-button {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .login-button:hover {
+      background: var(--primary-hover);
+    }
+    
+    .error-message {
+      color: var(--error);
+      font-size: 0.9rem;
+      margin-top: 4px;
+      height: 20px;
+    }
+    
+    .attempts-info {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 12px;
+    }
+    
+    .chat-container {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      background: var(--container-bg);
+    }
+    
+    .messages-container {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .message {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .message-user {
+      align-self: flex-end;
+      background: var(--message-user);
+      border-bottom-right-radius: 2px;
+    }
+    
+    .message-bot {
+      align-self: flex-start;
+      background: var(--message-bot);
+      border-bottom-left-radius: 2px;
+      border: 1px solid var(--border);
+    }
+    
+    .input-container {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+    }
+    
+    .message-input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--text);
+      font-size: 1rem;
+      resize: none;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    
+    .message-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .send-button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      align-self: flex-end;
+    }
+    
+    .send-button:hover {
+      background: var(--primary-hover);
+    }
+    
+    .send-button:disabled {
+      background: #475569;
+      cursor: not-allowed;
+    }
+    
+    .thinking {
+      display: flex;
+      gap: 4px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      align-self: flex-start;
+      background: var(--message-bot);
+      border-bottom-left-radius: 2px;
+    }
+    
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: #94a3b8;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+    
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    
+    /* Light mode variables */
+    .light-mode {
+      --background: #f8fafc;
+      --text: #0f172a;
+      --container-bg: #ffffff;
+      --input-bg: #f1f5f9;
+      --message-user: #3b82f6;
+      --message-bot: #f8fafc;
+      --border: #e2e8f0;
+    }
+    
+    .light-mode .message-user {
+      color: white;
+    }
+    
+    /* For mobile devices */
+    @media (max-width: 768px) {
+      .container {
+        height: 100vh;
+        width: 100%;
+        border-radius: 0;
+      }
+      
+      .message {
+        max-width: 90%;
+      }
+    }
+
+    .message p {
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .message pre {
+      background: rgba(0, 0, 0, 0.1);
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+
+    .message code {
+      font-family: 'Courier New', Courier, monospace;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>📚 BookBot</h1>
-    <input type="password" id="login" placeholder="Enter password..." />
-    <button onclick="checkPassword()">Login</button>
-
-    <div id="chat-ui" style="display:none;">
-      <textarea id="message" placeholder="Ask something..."></textarea>
-      <button onclick="sendMessage()">Send</button>
-      <pre id="response"></pre>
+    <div class="header">
+      <h1>📚 BookBot</h1>
+      <button class="theme-toggle" id="theme-toggle" title="Toggle theme">🌙</button>
+    </div>
+    
+    <div class="login-container" id="login-container">
+      <div class="login-card">
+        <div class="login-header">
+          <h2>Welcome to BookBot</h2>
+          <p>Please enter the password to continue</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-input">
+            <input type="password" id="password" placeholder="Enter password" />
+            <button class="toggle-password" id="toggle-password" type="button" title="Show/hide password">👁️</button>
+          </div>
+          <div class="error-message" id="error-message"></div>
+        </div>
+        
+        <button class="login-button" id="login-button">Login</button>
+        <div class="attempts-info" id="attempts-info"></div>
+      </div>
+    </div>
+    
+    <div class="chat-container" id="chat-container">
+      <div class="messages-container" id="messages-container">
+        <div class="message message-bot">
+          <p>👋 Hi there! I'm BookBot. How can I help you today?</p>
+        </div>
+      </div>
+      
+      <div class="input-container">
+        <textarea class="message-input" id="message-input" placeholder="Type your message..." rows="1"></textarea>
+        <button class="send-button" id="send-button" title="Send message">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
-  <script src="script.js"></script>
+  
+  <script>
+    // API URL
+    const API_URL = "https://book-engine-5zaw.onrender.com/chat";
+    
+    // Password hashing function (simple for demo purposes)
+    function hashPassword(password) {
+      let hash = 0;
+      if (password.length === 0) return hash;
+      for (let i = 0; i < password.length; i++) {
+        const char = password.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return hash.toString();
+    }
+    
+    // Password (hashed) - Original password is "letmein"
+    const HASHED_PASSWORD = "2912233378"; // This is hashPassword("letmein")
+    
+    // DOM Elements
+    const passwordInput = document.getElementById("password");
+    const togglePasswordBtn = document.getElementById("toggle-password");
+    const loginButton = document.getElementById("login-button");
+    const errorMessage = document.getElementById("error-message");
+    const attemptsInfo = document.getElementById("attempts-info");
+    const loginContainer = document.getElementById("login-container");
+    const chatContainer = document.getElementById("chat-container");
+    const messageInput = document.getElementById("message-input");
+    const sendButton = document.getElementById("send-button");
+    const messagesContainer = document.getElementById("messages-container");
+    const themeToggle = document.getElementById("theme-toggle");
+    
+    // State
+    let loginAttempts = 0;
+    let maxAttempts = 5;
+    let lockoutTime = 0;
+    let lockoutTimer = null;
+    let isDarkMode = true;
+    
+    // Theme toggle
+    themeToggle.addEventListener("click", () => {
+      isDarkMode = !isDarkMode;
+      document.body.classList.toggle("light-mode", !isDarkMode);
+      themeToggle.innerHTML = isDarkMode ? "🌙" : "☀️";
+      localStorage.setItem("darkMode", isDarkMode);
+    });
+    
+    // Load theme preference
+    if (localStorage.getItem("darkMode") === "false") {
+      isDarkMode = false;
+      document.body.classList.add("light-mode");
+      themeToggle.innerHTML = "☀️";
+    }
+    
+    // Toggle password visibility
+    togglePasswordBtn.addEventListener("click", () => {
+      const type = passwordInput.getAttribute("type");
+      passwordInput.setAttribute("type", type === "password" ? "text" : "password");
+      togglePasswordBtn.innerHTML = type === "password" ? "🙈" : "👁️";
+    });
+    
+    // Login process
+    loginButton.addEventListener("click", checkPassword);
+    passwordInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        checkPassword();
+      }
+    });
+    
+    function checkPassword() {
+      if (lockoutTime > 0) {
+        errorMessage.textContent = `Account locked. Try again in ${lockoutTime} seconds.`;
+        return;
+      }
+      
+      const password = passwordInput.value;
+      const hashedInput = hashPassword(password);
+      
+      if (hashedInput === HASHED_PASSWORD) {
+        loginContainer.style.display = "none";
+        chatContainer.style.display = "flex";
+        passwordInput.value = "";
+        resetLoginAttempts();
+      } else {
+        loginAttempts++;
+        const remainingAttempts = maxAttempts - loginAttempts;
+        
+        if (remainingAttempts <= 0) {
+          lockAccount();
+        } else {
+          errorMessage.textContent = `Incorrect password. ${remainingAttempts} attempts remaining.`;
+          attemptsInfo.textContent = `${loginAttempts} failed attempts`;
+        }
+      }
+    }
+    
+    function lockAccount() {
+      lockoutTime = 30;
+      errorMessage.textContent = `Account locked. Try again in ${lockoutTime} seconds.`;
+      loginButton.disabled = true;
+      passwordInput.disabled = true;
+      
+      lockoutTimer = setInterval(() => {
+        lockoutTime--;
+        errorMessage.textContent = `Account locked. Try again in ${lockoutTime} seconds.`;
+        
+        if (lockoutTime <= 0) {
+          clearInterval(lockoutTimer);
+          resetLoginAttempts();
+          loginButton.disabled = false;
+          passwordInput.disabled = false;
+          errorMessage.textContent = "";
+        }
+      }, 1000);
+    }
+    
+    function resetLoginAttempts() {
+      loginAttempts = 0;
+      attemptsInfo.textContent = "";
+      errorMessage.textContent = "";
+    }
+    
+    // Chat functionality
+    messageInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    
+    // Auto-resize textarea
+    messageInput.addEventListener("input", () => {
+      messageInput.style.height = "auto";
+      messageInput.style.height = (messageInput.scrollHeight) + "px";
+    });
+    
+    sendButton.addEventListener("click", sendMessage);
+    
+    async function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+      
+      // Add user message to chat
+      addMessage(message, "user");
+      messageInput.value = "";
+      messageInput.style.height = "auto";
+      messageInput.focus();
+      
+      // Disable send button
+      sendButton.disabled = true;
+      
+      // Show thinking animation
+      const thinkingEl = document.createElement("div");
+      thinkingEl.className = "thinking";
+      for (let i = 0; i < 3; i++) {
+        const dot = document.createElement("div");
+        dot.className = "dot";
+        thinkingEl.appendChild(dot);
+      }
+      messagesContainer.appendChild(thinkingEl);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message })
+        });
+        
+        const data = await response.json();
+        
+        // Remove thinking animation
+        messagesContainer.removeChild(thinkingEl);
+        
+        // Add bot response
+        addMessage(data.reply, "bot");
+      } catch (error) {
+        console.error("Error:", error);
+        
+        // Remove thinking animation
+        messagesContainer.removeChild(thinkingEl);
+        
+        // Add error message
+        addMessage("Sorry, I couldn't process your request. Please try again later.", "bot");
+      }
+      
+      // Re-enable send button
+      sendButton.disabled = false;
+    }
+    
+    function addMessage(text, sender) {
+      const messageEl = document.createElement("div");
+      messageEl.className = `message message-${sender}`;
+      
+      // Process text for markdown-like formatting (simple version)
+      let processedText = text
+        .replace(/\n/g, "<br>")
+        .replace(/```([^`]+)```/g, "<pre><code>$1</code></pre>");
+      
+      messageEl.innerHTML = `<p>${processedText}</p>`;
+      messagesContainer.appendChild(messageEl);
+      
+      // Scroll to bottom
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    
+    // Check for autologin (for development only - remove in production)
+    // Uncomment to enable autologin for development
+    // loginContainer.style.display = "none";
+    // chatContainer.style.display = "flex";
+  </script>
 </body>
 </html>
