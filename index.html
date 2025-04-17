@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BookBot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
       --background: #0f172a;
@@ -201,6 +202,7 @@
       flex: 1;
       flex-direction: column;
       background: var(--container-bg);
+      overflow: hidden; /* Added to contain scrolling */
     }
     
     .messages-container {
@@ -210,6 +212,7 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+      overscroll-behavior: contain; /* Prevent scroll chaining */
       /* Custom scrollbar */
       scrollbar-width: thin;
       scrollbar-color: var(--primary) var(--container-bg);
@@ -238,6 +241,9 @@
       padding: 12px 16px;
       border-radius: 10px;
       animation: fadeIn 0.3s ease;
+      word-break: break-word; /* Ensure long words break */
+      overflow-wrap: break-word; /* Alternative to word-break */
+      overflow: hidden; /* Hide overflow */
     }
     
     @keyframes fadeIn {
@@ -263,6 +269,7 @@
       border-top: 1px solid var(--border);
       display: flex;
       gap: 12px;
+      flex-shrink: 0; /* Prevent shrinking */
     }
     
     .message-input {
@@ -377,10 +384,27 @@
       border-radius: 4px;
       overflow-x: auto;
       margin: 8px 0;
+      max-width: 100%;
     }
 
     .message code {
       font-family: 'Courier New', Courier, monospace;
+      white-space: pre-wrap;
+    }
+    
+    /* New styles for better scrolling */
+    .chat-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    .chat-content {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
   </style>
 </head>
@@ -418,9 +442,11 @@
     </div>
     
     <div class="chat-container" id="chat-container">
-      <div class="messages-container" id="messages-container">
-        <div class="message message-bot">
-          <p>👋 Hi there! I'm BookBot. How can I help you today?</p>
+      <div class="chat-content">
+        <div class="messages-container" id="messages-container">
+          <div class="message message-bot">
+            <p>👋 Hi there! I'm BookBot. How can I help you today?</p>
+          </div>
         </div>
       </div>
       
@@ -453,8 +479,8 @@
     }
     
     // Required credentials
-    const REQUIRED_USERNAME = "alfiochoa";
-    const HASHED_PASSWORD = "1732823352"; // This is hashPassword("letmein")
+    const REQUIRED_USERNAME = "123";
+    const HASHED_PASSWORD = "1732823352";
     
     // DOM Elements
     const usernameInput = document.getElementById("username");
