@@ -197,22 +197,48 @@
       margin-top: 12px;
     }
     
+    /* Improved chat container layout */
     .chat-container {
       display: none;
-      flex: 1;
       flex-direction: column;
+      height: 100%;
       background: var(--container-bg);
-      overflow: hidden; /* Added to contain scrolling */
+    }
+    
+    /* New chat layout structure */
+    .chat-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    .chat-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .messages-wrapper {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
     }
     
     .messages-container {
-      flex: 1;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       padding: 16px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      overscroll-behavior: contain; /* Prevent scroll chaining */
+      overscroll-behavior: contain;
       /* Custom scrollbar */
       scrollbar-width: thin;
       scrollbar-color: var(--primary) var(--container-bg);
@@ -241,9 +267,8 @@
       padding: 12px 16px;
       border-radius: 10px;
       animation: fadeIn 0.3s ease;
-      word-break: break-word; /* Ensure long words break */
-      overflow-wrap: break-word; /* Alternative to word-break */
-      overflow: hidden; /* Hide overflow */
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
     
     @keyframes fadeIn {
@@ -269,7 +294,7 @@
       border-top: 1px solid var(--border);
       display: flex;
       gap: 12px;
-      flex-shrink: 0; /* Prevent shrinking */
+      flex-shrink: 0;
     }
     
     .message-input {
@@ -392,19 +417,25 @@
       white-space: pre-wrap;
     }
     
-    /* New styles for better scrolling */
-    .chat-layout {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
+    /* Improved message content styling */
+    .message-content {
       overflow: hidden;
     }
     
-    .chat-content {
-      flex: 1;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+    /* Better handling for long content */
+    .long-content {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+    
+    .long-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .long-content::-webkit-scrollbar-thumb {
+      background-color: rgba(255,255,255,0.2);
+      border-radius: 3px;
     }
   </style>
 </head>
@@ -442,22 +473,28 @@
     </div>
     
     <div class="chat-container" id="chat-container">
-      <div class="chat-content">
-        <div class="messages-container" id="messages-container">
-          <div class="message message-bot">
-            <p>👋 Hi there! I'm BookBot. How can I help you today?</p>
+      <div class="chat-layout">
+        <div class="chat-content">
+          <div class="messages-wrapper">
+            <div class="messages-container" id="messages-container">
+              <div class="message message-bot">
+                <div class="message-content">
+                  <p>👋 Hi there! I'm BookBot. How can I help you today?</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div class="input-container">
-        <textarea class="message-input" id="message-input" placeholder="Type your message..." rows="1"></textarea>
-        <button class="send-button" id="send-button" title="Send message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
-        </button>
+        
+        <div class="input-container">
+          <textarea class="message-input" id="message-input" placeholder="Type your message..." rows="1"></textarea>
+          <button class="send-button" id="send-button" title="Send message">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -479,7 +516,7 @@
     }
     
     // Required credentials
-    const REQUIRED_USERNAME = "123";
+    const REQUIRED_USERNAME = "alfiochoa";
     const HASHED_PASSWORD = "1732823352";
     
     // DOM Elements
@@ -638,7 +675,7 @@
         thinkingEl.appendChild(dot);
       }
       messagesContainer.appendChild(thinkingEl);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      scrollToBottom();
       
       try {
         const response = await fetch(API_URL, {
@@ -675,16 +712,33 @@
       const messageEl = document.createElement("div");
       messageEl.className = `message message-${sender}`;
       
-      // Process text for markdown-like formatting (simple version)
+      // Create message content container
+      const contentEl = document.createElement("div");
+      contentEl.className = "message-content";
+      
+      // Check if this is a long message that needs its own scroll
+      const isLongMessage = text.length > 1000 || text.split('\n').length > 10;
+      if (isLongMessage) {
+        contentEl.classList.add("long-content");
+      }
+      
+      // Process text for markdown-like formatting
       let processedText = text
         .replace(/\n/g, "<br>")
         .replace(/```([^`]+)```/g, "<pre><code>$1</code></pre>");
       
-      messageEl.innerHTML = `<p>${processedText}</p>`;
+      contentEl.innerHTML = `<p>${processedText}</p>`;
+      messageEl.appendChild(contentEl);
       messagesContainer.appendChild(messageEl);
       
-      // Scroll to bottom
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      scrollToBottom();
+    }
+    
+    function scrollToBottom() {
+      // Use setTimeout to ensure DOM updates are complete
+      setTimeout(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }, 10);
     }
   </script>
 </body>
