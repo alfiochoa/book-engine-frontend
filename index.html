@@ -210,6 +210,27 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+      /* Custom scrollbar */
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) var(--container-bg);
+    }
+    
+    /* Custom scrollbar for WebKit browsers */
+    .messages-container::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .messages-container::-webkit-scrollbar-track {
+      background: var(--container-bg);
+    }
+    
+    .messages-container::-webkit-scrollbar-thumb {
+      background-color: var(--primary);
+      border-radius: 4px;
+    }
+    
+    .messages-container::-webkit-scrollbar-thumb:hover {
+      background-color: var(--primary-hover);
     }
     
     .message {
@@ -374,7 +395,12 @@
       <div class="login-card">
         <div class="login-header">
           <h2>Welcome to BookBot</h2>
-          <p>Please enter the password to continue</p>
+          <p>Please enter your credentials to continue</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter username" />
         </div>
         
         <div class="form-group">
@@ -426,10 +452,12 @@
       return hash.toString();
     }
     
-    // Password (hashed) - Original password is "letmein"
+    // Required credentials
+    const REQUIRED_USERNAME = "alfiochoa";
     const HASHED_PASSWORD = "1732823352"; // This is hashPassword("letmein")
     
     // DOM Elements
+    const usernameInput = document.getElementById("username");
     const passwordInput = document.getElementById("password");
     const togglePasswordBtn = document.getElementById("toggle-password");
     const loginButton = document.getElementById("login-button");
@@ -472,25 +500,37 @@
     });
     
     // Login process
-    loginButton.addEventListener("click", checkPassword);
+    loginButton.addEventListener("click", checkCredentials);
     passwordInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
-        checkPassword();
+        checkCredentials();
+      }
+    });
+    usernameInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        checkCredentials();
       }
     });
     
-    function checkPassword() {
+    function checkCredentials() {
       if (lockoutTime > 0) {
         errorMessage.textContent = `Account locked. Try again in ${lockoutTime} seconds.`;
         return;
       }
       
+      const username = usernameInput.value.trim();
       const password = passwordInput.value;
       const hashedInput = hashPassword(password);
+      
+      if (username !== REQUIRED_USERNAME) {
+        errorMessage.textContent = "Invalid username";
+        return;
+      }
       
       if (hashedInput === HASHED_PASSWORD) {
         loginContainer.style.display = "none";
         chatContainer.style.display = "flex";
+        usernameInput.value = "";
         passwordInput.value = "";
         resetLoginAttempts();
       } else {
@@ -510,6 +550,7 @@
       lockoutTime = 30;
       errorMessage.textContent = `Account locked. Try again in ${lockoutTime} seconds.`;
       loginButton.disabled = true;
+      usernameInput.disabled = true;
       passwordInput.disabled = true;
       
       lockoutTimer = setInterval(() => {
@@ -520,6 +561,7 @@
           clearInterval(lockoutTimer);
           resetLoginAttempts();
           loginButton.disabled = false;
+          usernameInput.disabled = false;
           passwordInput.disabled = false;
           errorMessage.textContent = "";
         }
@@ -618,11 +660,6 @@
       // Scroll to bottom
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-    
-    // Check for autologin (for development only - remove in production)
-    // Uncomment to enable autologin for development
-    // loginContainer.style.display = "none";
-    // chatContainer.style.display = "flex";
   </script>
 </body>
 </html>
